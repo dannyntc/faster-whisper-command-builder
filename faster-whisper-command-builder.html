@@ -1,0 +1,1069 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Faster-Whisper Command Builder</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f6f8;
+      --panel: #ffffff;
+      --ink: #17202a;
+      --muted: #5f6b76;
+      --line: #d8dee5;
+      --accent: #176c9f;
+      --accent-strong: #0f527a;
+      --ok: #176b3a;
+      --warn: #985c00;
+      --shadow: 0 10px 28px rgba(20, 32, 45, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Segoe UI", Arial, sans-serif;
+      line-height: 1.45;
+    }
+
+    main {
+      width: min(1180px, calc(100% - 32px));
+      margin: 24px auto 40px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(360px, 0.85fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    header {
+      width: min(1180px, calc(100% - 32px));
+      margin: 24px auto 0;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .subhead {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    section,
+    aside {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    section {
+      padding: 18px;
+    }
+
+    aside {
+      position: sticky;
+      top: 16px;
+      padding: 16px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    fieldset {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      margin: 0 0 14px;
+    }
+
+    legend {
+      padding: 0 6px;
+      font-weight: 700;
+      color: #24313f;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid #bcc7d1;
+      border-radius: 6px;
+      padding: 9px 10px;
+      font: inherit;
+      color: var(--ink);
+      background: #fff;
+    }
+
+    textarea {
+      min-height: 74px;
+      resize: vertical;
+    }
+
+    input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      accent-color: var(--accent);
+    }
+
+    .check-row {
+      display: grid;
+      grid-template-columns: 20px minmax(0, 1fr);
+      gap: 9px;
+      align-items: start;
+      margin: 9px 0;
+    }
+
+    .check-row label {
+      margin: 0;
+      color: var(--ink);
+      font-size: 14px;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 5px;
+      line-height: 1.45;
+      text-align: justify;
+      text-align-last: left;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 12px 0;
+    }
+
+    button {
+      border: 1px solid var(--accent-strong);
+      border-radius: 6px;
+      padding: 9px 12px;
+      background: var(--accent);
+      color: white;
+      font: inherit;
+      font-weight: 650;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: #fff;
+      color: var(--accent-strong);
+    }
+
+    button.compact {
+      padding: 8px 10px;
+      white-space: nowrap;
+    }
+
+    .path-list {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 9px;
+    }
+
+    .file-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    button:focus,
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: 3px solid rgba(23, 108, 159, 0.2);
+      outline-offset: 1px;
+    }
+
+    pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+      margin: 0;
+      padding: 12px;
+      background: #101820;
+      color: #edf5fb;
+      border-radius: 8px;
+      font: 13px/1.45 Consolas, "Courier New", monospace;
+      max-height: 62vh;
+      overflow: auto;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin: 12px 0;
+      font-size: 13px;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 7px 9px;
+      background: #f9fbfc;
+      min-width: 0;
+    }
+
+    .pill span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      margin-bottom: 2px;
+    }
+
+    .status {
+      min-height: 20px;
+      color: var(--ok);
+      font-size: 13px;
+      margin-top: 6px;
+    }
+
+    .warning {
+      color: var(--warn);
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      aside {
+        position: static;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .grid,
+      .summary {
+        grid-template-columns: 1fr;
+      }
+
+      header,
+      main {
+        width: min(100% - 20px, 1180px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Faster-Whisper Command Builder</h1>
+    <p class="subhead">Choose the options, then copy the generated PowerShell command.</p>
+  </header>
+
+  <main>
+    <section aria-label="Command options">
+      <fieldset>
+        <legend>1. File Paths</legend>
+        <div class="grid">
+          <div>
+            <label for="inputMode">Input mode</label>
+            <select id="inputMode">
+              <option value="single">Single file</option>
+              <option value="multi">Multiple files, batch transcribe</option>
+            </select>
+          </div>
+          <div class="full" id="singleInputWrap">
+            <label for="audioPath">Input File</label>
+            <input id="audioPath" type="text" value="C:\Users\YourName\Desktop\audio.mp3">
+            <div class="hint">Paste the full Windows path, for example C:\Users\YourName\Desktop\meeting.mp4.<br>If you paste multiple copied file paths, the page will switch to multi-file mode and split them into separate rows.<br>The generated command will save the output file in the same folder as this input file.</div>
+          </div>
+          <div class="full" id="multiInputWrap" hidden>
+            <label>Input Files</label>
+            <div id="filePathList" class="path-list">
+              <div class="file-row">
+                <input class="multi-file-path" type="text" value="C:\Users\YourName\Desktop\audio.mp3" aria-label="Input file path">
+                <button class="secondary compact remove-file" type="button">Remove</button>
+              </div>
+            </div>
+            <button id="addFileButton" class="secondary compact" type="button">Add another file</button>
+            <div class="hint">Add one full Windows path per row.<br>You can also paste multiple copied file paths into any row; the page will split them into separate rows.<br>The generated command will save each output file in the same folder as its matching input file.</div>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>2. Runtime And Model</legend>
+        <div class="grid">
+          <div>
+            <label for="profile">Runtime profile</label>
+            <select id="profile">
+              <option value="gpu">GPU, recommended for GTX 1050</option>
+              <option value="cpu" selected>CPU</option>
+            </select>
+          </div>
+          <div>
+            <label for="modelName">Model name</label>
+            <select id="modelName">
+              <option value="small">small</option>
+              <option value="distill-large-v3.5-eng-only">distill-large-v3.5-eng-only</option>
+              <option value="medium" selected>medium</option>
+              <option value="large-v3-turbo">large-v3-turbo</option>
+              <option value="large-v3">large-v3</option>
+            </select>
+            <div class="hint">These choices use your local model folders. The display name can be friendly, but the folder path and model files must remain in place.</div>
+          </div>
+          <div>
+            <label for="computeType">Compute type</label>
+            <select id="computeType">
+              <option value="int8">int8</option>
+              <option value="int8_float32">int8_float32</option>
+              <option value="float32">float32</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>3. Transcript Task</legend>
+        <div class="grid">
+          <div>
+            <label for="task">Task</label>
+            <select id="task">
+              <option value="transcribe">Normal transcript</option>
+              <option value="translate">Translate speech to English</option>
+            </select>
+            <div class="hint">Normal transcript keeps the spoken language as-is. Translate speech to English listens to non-English speech and writes English text.</div>
+          </div>
+          <div>
+            <label for="outputSuffix">Output suffix</label>
+            <select id="outputSuffix">
+              <option value=".txt">Plain text transcript, .txt</option>
+              <option value=".srt">SubRip subtitles with timestamps, .srt</option>
+              <option value=".vtt">WebVTT subtitles with timestamps, .vtt</option>
+            </select>
+            <div class="hint">Plain text .txt saves readable text.<br>If the task is translate, that .txt output will be English text.<br>The output file is always saved in the same folder as the input file.<br>Use SubRip .srt for VLC, media players, YouTube uploads, and most video editors.<br>Use WebVTT .vtt for HTML5/web players and browser-based subtitles.</div>
+          </div>
+          <div>
+            <label for="beamSize">Beam size</label>
+            <input id="beamSize" type="number" min="1" max="10" step="1" value="5">
+            <div class="hint">Higher can improve quality but slows down.</div>
+          </div>
+          <div>
+            <label for="language">Force language</label>
+            <select id="language">
+              <option value="">Auto detect</option>
+              <option value="en">English, en</option>
+              <option value="zh" selected>Chinese, zh</option>
+              <option value="ja">Japanese, ja</option>
+              <option value="ko">Korean, ko</option>
+              <option value="ms">Malay, ms</option>
+              <option value="ta">Tamil, ta</option>
+              <option value="custom">Custom code</option>
+            </select>
+            <div class="hint">Tells faster-whisper what language is being spoken instead of letting it guess. Use this when auto-detect chooses the wrong language.</div>
+          </div>
+          <div id="customLanguageWrap" hidden>
+            <label for="customLanguage">Custom language code</label>
+            <input id="customLanguage" type="text" placeholder="Example: fr">
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>4. Optional Add-Ons</legend>
+        <div class="grid">
+          <div>
+            <div class="check-row">
+              <input id="vadFilter" type="checkbox" checked>
+              <label for="vadFilter">Use silence filtering</label>
+            </div>
+            <div class="hint">Skips parts that sound like silence or non-speech so the transcript is cleaner.</div>
+            <div class="check-row">
+              <input id="aggressiveVad" type="checkbox">
+              <label for="aggressiveVad">More aggressive silence removal</label>
+            </div>
+            <div class="hint">Cuts pauses more strongly. Use this when recordings have long empty gaps.</div>
+            <label for="minSilence">Minimum silence duration, ms</label>
+            <input id="minSilence" type="number" min="100" step="50" value="500">
+            <div class="hint">How long a pause must be before it counts as silence. 500 ms means half a second. Lower values remove shorter pauses.</div>
+          </div>
+          <div>
+            <div class="check-row">
+              <input id="reduceRepeat" type="checkbox">
+              <label for="reduceRepeat">Reduce repeated or stuck text</label>
+            </div>
+            <div class="hint">Helps when the transcript loops or repeats phrases that were not actually said.</div>
+          </div>
+          <div>
+            <label for="initialPrompt">Names or technical terms</label>
+            <textarea id="initialPrompt" placeholder="Names and terms: project term, OpenAI, faster-whisper">请使用简体中文转写。</textarea>
+            <div class="hint">Context given before transcription starts. Use it for names, acronyms, product names, jargon that may be misheard, or Simplified Chinese output preference.</div>
+          </div>
+          <div>
+            <label for="hotwords">Hotwords</label>
+            <textarea id="hotwords" placeholder="project term, OpenAI, faster-whisper"></textarea>
+            <div class="hint">Hotwords act as a recognition hint; faster-whisper will pay extra attention during transcription.<br>They can improve matching when the audio sounds similar, but they do not force the words to appear if they were not spoken.<br>Use this for names, brands, acronyms, technical terms, or unusual phrases that may be misheard.</div>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>5. Diarization</legend>
+        <div class="grid">
+          <div class="full">
+            <div class="check-row">
+              <input id="enableDiarization" type="checkbox">
+              <label for="enableDiarization">Identify multiple speakers with pyannote</label>
+            </div>
+            <div class="hint">Uses the separate faster-whisper-diarization environment, then writes speaker-labeled output such as SPEAKER_00 and SPEAKER_01. Leave this off for normal faster-whisper transcript commands.</div>
+          </div>
+          <div>
+            <label for="speakerPreset">Speaker count</label>
+            <select id="speakerPreset">
+              <option value="auto">Auto detect speaker count</option>
+              <option value="known2">Exactly 2 speakers</option>
+              <option value="known3">Exactly 3 speakers</option>
+              <option value="range">Custom min and max</option>
+            </select>
+            <div class="hint">If you know the number of speakers, setting it usually improves diarization.</div>
+          </div>
+          <div id="speakerRangeWrap" hidden>
+            <div class="grid">
+              <div>
+                <label for="minSpeakers">Min speakers</label>
+                <input id="minSpeakers" type="number" min="1" max="20" step="1" value="2">
+              </div>
+              <div>
+                <label for="maxSpeakers">Max speakers</label>
+                <input id="maxSpeakers" type="number" min="1" max="20" step="1" value="4">
+              </div>
+            </div>
+          </div>
+          <div>
+            <label for="pyannoteModel">Pyannote model</label>
+            <select id="pyannoteModel">
+              <option value="pyannote/speaker-diarization-community-1">community-1, local open model</option>
+              <option value="custom">Custom model id</option>
+            </select>
+            <div class="hint">Default requires accepting the model terms on Hugging Face.</div>
+          </div>
+          <div>
+            <label for="pyannoteDevice">Pyannote device</label>
+            <select id="pyannoteDevice">
+              <option value="auto">Auto, use GPU if available</option>
+              <option value="cuda">GPU</option>
+              <option value="cpu" selected>CPU</option>
+            </select>
+            <div class="hint">GPU is faster when the isolated diarization environment can use your graphics card. CPU is safer if GPU memory runs out.</div>
+          </div>
+          <div id="customPyannoteModelWrap" hidden>
+            <label for="customPyannoteModel">Custom pyannote model id</label>
+            <input id="customPyannoteModel" type="text" placeholder="pyannote/speaker-diarization-community-1">
+          </div>
+          <div>
+            <label for="hfToken">Hugging Face token, optional</label>
+            <input id="hfToken" type="password" placeholder="Leave blank to use existing $env:HF_TOKEN">
+            <div class="hint">If filled, the generated command sets $env:HF_TOKEN for that PowerShell run. If blank, set $env:HF_TOKEN yourself before running the command.</div>
+          </div>
+          <div>
+            <label for="diarizeOutputDir">Diarization output folder, optional</label>
+            <input id="diarizeOutputDir" type="text" placeholder="Default: same folder as the input file">
+            <div class="hint">Leave blank to save diarization output in the same folder as the input file. For multiple files, the generated command uses each input file's folder.</div>
+          </div>
+        </div>
+      </fieldset>
+    </section>
+
+    <aside aria-label="Generated command">
+      <strong>Generated PowerShell</strong>
+      <div class="hint">After clicking Copy command, paste the whole command into Windows PowerShell and press Enter.<br>For normal transcription, paste the full block: it starts with $env:PATH, then $Code = @', and ends with $Code | &amp; "...python.exe" -.<br>For diarization, the command calls the separate faster-whisper-diarization runner and expects that setup to already exist.<br>The prompt should start with PS, for example PS C:\Users\YourName&gt;. If it only shows C:\WINDOWS\system32&gt;, that is Command Prompt and this PowerShell command will not run correctly.</div>
+      <div class="summary" id="summary"></div>
+      <div class="actions">
+        <button id="copyButton" type="button">Copy command</button>
+        <button id="resetButton" type="button" class="secondary">Reset defaults</button>
+      </div>
+      <pre id="commandOutput" tabindex="0"></pre>
+      <div id="status" class="status" role="status"></div>
+      <div id="warning" class="warning"></div>
+    </aside>
+  </main>
+
+  <script>
+    const PYTHON_PATH = String.raw`C:\Users\YourName\Desktop\Tools\faster-whisper\faster-whisper\Scripts\python.exe`;
+    const DIARIZE_ROOT = String.raw`C:\Users\YourName\Desktop\Tools\faster-whisper-diarization`;
+    const DIARIZE_PYTHON_PATH = String.raw`C:\Users\YourName\Desktop\Tools\faster-whisper-diarization\.venv\Scripts\python.exe`;
+    const DIARIZE_SCRIPT_PATH = String.raw`C:\Users\YourName\Desktop\Tools\faster-whisper-diarization\diarize_with_faster_whisper.py`;
+
+    const defaults = {
+      inputMode: "single",
+      audioPath: String.raw`C:\Users\YourName\Desktop\audio.mp3`,
+      profile: "cpu",
+      modelName: "medium",
+      computeType: "int8",
+      task: "transcribe",
+      outputSuffix: ".txt",
+      beamSize: "5",
+      language: "zh",
+      customLanguage: "",
+      vadFilter: true,
+      aggressiveVad: false,
+      minSilence: "500",
+      reduceRepeat: false,
+      initialPrompt: "请使用简体中文转写。",
+      hotwords: "",
+      enableDiarization: false,
+      speakerPreset: "auto",
+      minSpeakers: "2",
+      maxSpeakers: "4",
+      pyannoteModel: "pyannote/speaker-diarization-community-1",
+      pyannoteDevice: "cpu",
+      customPyannoteModel: "",
+      hfToken: "",
+      diarizeOutputDir: ""
+    };
+
+    const ids = Object.keys(defaults);
+    const el = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
+    const output = document.getElementById("commandOutput");
+    const summary = document.getElementById("summary");
+    const status = document.getElementById("status");
+    const warning = document.getElementById("warning");
+    const customLanguageWrap = document.getElementById("customLanguageWrap");
+    const speakerRangeWrap = document.getElementById("speakerRangeWrap");
+    const customPyannoteModelWrap = document.getElementById("customPyannoteModelWrap");
+    const singleInputWrap = document.getElementById("singleInputWrap");
+    const multiInputWrap = document.getElementById("multiInputWrap");
+    const filePathList = document.getElementById("filePathList");
+
+    function psQuote(value) {
+      return `"${String(value).replace(/`/g, "``").replace(/"/g, '`"')}"`;
+    }
+
+    function pyString(value) {
+      return JSON.stringify(String(value));
+    }
+
+    function cleanFilePath(value) {
+      let path = String(value).trim();
+      while (
+        path.length >= 2 &&
+        ((path.startsWith('"') && path.endsWith('"')) || (path.startsWith("'") && path.endsWith("'")))
+      ) {
+        path = path.slice(1, -1).trim();
+      }
+      return path;
+    }
+
+    function getDevice() {
+      return el.profile.value === "gpu" ? "cuda" : "cpu";
+    }
+
+    function getLanguage() {
+      if (el.language.value === "custom") {
+        return el.customLanguage.value.trim();
+      }
+      return el.language.value;
+    }
+
+    function getModelPath() {
+      const modelPaths = {
+        "small": String.raw`C:\Users\YourName\Desktop\Tools\faster-whisper\models\small`,
+        "medium": String.raw`C:\Users\YourName\Desktop\Tools\faster-whisper\models\medium`,
+        "large-v3": String.raw`C:\Users\YourName\Desktop\Tools\faster-whisper\models\large-v3`,
+        "large-v3-turbo": String.raw`C:\Users\YourName\Desktop\Tools\faster-whisper\models\large-v3-turbo`,
+        "distill-large-v3.5-eng-only": String.raw`C:\Users\YourName\Desktop\Tools\faster-whisper\models\distil-large-v3.5`
+      };
+
+      return modelPaths[el.modelName.value] || modelPaths["medium"];
+    }
+
+    function getPyannoteModel() {
+      if (el.pyannoteModel.value === "custom") {
+        return el.customPyannoteModel.value.trim() || "pyannote/speaker-diarization-community-1";
+      }
+      return el.pyannoteModel.value;
+    }
+
+    function getSpeakerArgs() {
+      if (el.speakerPreset.value === "known2") {
+        return { min: 2, max: 2 };
+      }
+      if (el.speakerPreset.value === "known3") {
+        return { min: 3, max: 3 };
+      }
+      if (el.speakerPreset.value === "range") {
+        const min = Number(el.minSpeakers.value || 0);
+        const max = Number(el.maxSpeakers.value || 0);
+        return {
+          min: min > 0 ? min : null,
+          max: max > 0 ? max : null
+        };
+      }
+      return { min: null, max: null };
+    }
+
+    function getInputFiles() {
+      if (el.inputMode.value === "multi") {
+        const paths = Array.from(filePathList.querySelectorAll(".multi-file-path"))
+          .map((input) => cleanFilePath(input.value))
+          .filter(Boolean);
+        return paths.length ? paths : [defaults.audioPath];
+      }
+
+      return [cleanFilePath(el.audioPath.value) || defaults.audioPath];
+    }
+
+    function createFileRow(value = "") {
+      const row = document.createElement("div");
+      row.className = "file-row";
+
+      const input = document.createElement("input");
+      input.className = "multi-file-path";
+      input.type = "text";
+      input.value = value;
+      input.setAttribute("aria-label", "Input file path");
+
+      const button = document.createElement("button");
+      button.className = "secondary compact remove-file";
+      button.type = "button";
+      button.textContent = "Remove";
+
+      row.append(input, button);
+      return row;
+    }
+
+    function setMultiFiles(paths) {
+      filePathList.innerHTML = "";
+      paths.forEach((path) => filePathList.append(createFileRow(cleanFilePath(path))));
+    }
+
+    function splitPastedPaths(text) {
+      const trimmed = text.trim();
+      if (!trimmed) return [];
+
+      const quoted = Array.from(trimmed.matchAll(/"([^"]+)"/g))
+        .map((match) => cleanFilePath(match[1]))
+        .filter(Boolean);
+      if (quoted.length > 1) return quoted;
+
+      const lines = trimmed.split(/\r?\n/)
+        .map((line) => cleanFilePath(line))
+        .filter(Boolean);
+      if (lines.length > 1) return lines;
+
+      return [];
+    }
+
+    function applyPastedPaths(paths, targetInput = null) {
+      if (targetInput && targetInput.classList.contains("multi-file-path")) {
+        const rows = Array.from(filePathList.querySelectorAll(".file-row"));
+        const targetRow = targetInput.closest(".file-row");
+        const targetIndex = Math.max(rows.indexOf(targetRow), 0);
+        const existingPaths = rows.map((row) => row.querySelector(".multi-file-path").value.trim());
+        const nextPaths = [
+          ...existingPaths.slice(0, targetIndex),
+          ...paths,
+          ...existingPaths.slice(targetIndex + 1)
+        ].filter(Boolean);
+        setMultiFiles(nextPaths);
+      } else {
+        el.inputMode.value = "multi";
+        setMultiFiles(paths);
+      }
+
+      render();
+      status.textContent = `Split ${paths.length} pasted file paths into separate rows.`;
+    }
+
+    function handlePathPaste(event) {
+      const text = event.clipboardData?.getData("text") || "";
+      const paths = splitPastedPaths(text);
+      if (paths.length <= 1) {
+        const cleaned = cleanFilePath(text);
+        if (!cleaned || cleaned === text) return;
+
+        event.preventDefault();
+        event.target.value = cleaned;
+        render();
+        status.textContent = "Removed wrapping quotes from pasted file path.";
+        return;
+      }
+
+      event.preventDefault();
+      applyPastedPaths(paths, event.target);
+    }
+
+    function normalizePathInput(input) {
+      const cleaned = cleanFilePath(input.value);
+      if (cleaned === input.value) return false;
+
+      input.value = cleaned;
+      render();
+      return true;
+    }
+
+    function handlePathInput(event) {
+      if (event.target === el.audioPath || event.target.classList.contains("multi-file-path")) {
+        if (!normalizePathInput(event.target)) {
+          render();
+        }
+      }
+    }
+
+    function buildOptionsObject() {
+      const options = {
+        beam_size: Number(el.beamSize.value || 5),
+        vad_filter: Boolean(el.vadFilter.checked)
+      };
+
+      if (el.task.value === "translate") {
+        options.task = "translate";
+      }
+
+      const language = getLanguage();
+      if (language) {
+        options.language = language;
+      }
+
+      if (el.aggressiveVad.checked) {
+        options.vad_parameters = {
+          min_silence_duration_ms: Number(el.minSilence.value || 500)
+        };
+      }
+
+      if (el.reduceRepeat.checked) {
+        options.condition_on_previous_text = false;
+      }
+
+      if (el.initialPrompt.value.trim()) {
+        options.initial_prompt = el.initialPrompt.value.trim();
+      }
+
+      if (el.hotwords.value.trim()) {
+        options.hotwords = el.hotwords.value.trim();
+      }
+
+      return options;
+    }
+
+    function buildTranscribeCommand() {
+      const options = buildOptionsObject();
+      const optionsJson = JSON.stringify(options, null, 2);
+      const inputFiles = getInputFiles();
+      const inputFileLines = inputFiles.map((path) => `    ${pyString(path)},`);
+      const pythonPath = PYTHON_PATH;
+      const cublasBin = pythonPath.replace(/\\Scripts\\python\.exe$/i, "\\Lib\\site-packages\\nvidia\\cublas\\bin");
+      const code = [
+        "from faster_whisper import WhisperModel",
+        "import json",
+        "import pathlib",
+        "import re",
+        "import time",
+        "",
+        "input_files = [",
+        ...inputFileLines,
+        "]",
+        `model_name = ${pyString(getModelPath())}`,
+        `device = ${JSON.stringify(getDevice())}`,
+        `compute_type = ${JSON.stringify(el.computeType.value)}`,
+        `output_suffix = ${JSON.stringify(el.outputSuffix.value.trim() || ".txt")}`,
+        `options = json.loads(${JSON.stringify(optionsJson)})`,
+        "",
+        "def clean_text(text):",
+        "    return re.sub(r'\\s+', ' ', text).strip()",
+        "",
+        "def srt_time(seconds):",
+        "    milliseconds = int(round(seconds * 1000))",
+        "    hours, remainder = divmod(milliseconds, 3600000)",
+        "    minutes, remainder = divmod(remainder, 60000)",
+        "    secs, millis = divmod(remainder, 1000)",
+        "    return f'{hours:02}:{minutes:02}:{secs:02},{millis:03}'",
+        "",
+        "def vtt_time(seconds):",
+        "    return srt_time(seconds).replace(',', '.')",
+        "",
+        "def format_elapsed(seconds):",
+        "    seconds = int(seconds)",
+        "    hours, remainder = divmod(seconds, 3600)",
+        "    minutes, secs = divmod(remainder, 60)",
+        "    if hours:",
+        "        return f'{hours:d}:{minutes:02d}:{secs:02d}'",
+        "    return f'{minutes:02d}:{secs:02d}'",
+        "",
+        "def write_output(audio, segments):",
+        "    out = pathlib.Path(audio).with_suffix(output_suffix)",
+        "    if output_suffix.lower() == '.srt':",
+        "        lines = []",
+        "        for index, segment in enumerate(segments, start=1):",
+        "            text = clean_text(segment.text)",
+        "            if text:",
+        "                lines.extend([str(index), f'{srt_time(segment.start)} --> {srt_time(segment.end)}', text, ''])",
+        "        out.write_text('\\n'.join(lines), encoding='utf-8')",
+        "    elif output_suffix.lower() == '.vtt':",
+        "        lines = ['WEBVTT', '']",
+        "        for segment in segments:",
+        "            text = clean_text(segment.text)",
+        "            if text:",
+        "                lines.extend([f'{vtt_time(segment.start)} --> {vtt_time(segment.end)}', text, ''])",
+        "        out.write_text('\\n'.join(lines), encoding='utf-8')",
+        "    else:",
+        "        out.write_text('\\n'.join(clean_text(segment.text) for segment in segments if clean_text(segment.text)), encoding='utf-8')",
+        "    return out",
+        "",
+        "model = WhisperModel(model_name, device=device, compute_type=compute_type)",
+        "",
+        "for audio in input_files:",
+        "    print('Transcribing:', audio, flush=True)",
+        "    segments, info = model.transcribe(audio, **options)",
+        "    print('Detected language:', info.language, flush=True)",
+        "    print('Language probability:', round(info.language_probability, 3), flush=True)",
+        "    print('Duration:', srt_time(info.duration).replace(',', '.'), flush=True)",
+        "    collected_segments = []",
+        "    last_percent = -1",
+        "    started_at = time.monotonic()",
+        "    for segment in segments:",
+        "        collected_segments.append(segment)",
+        "        percent = int(min(100, round((segment.end / info.duration) * 100))) if info.duration else 0",
+        "        if percent != last_percent:",
+        "            elapsed = format_elapsed(time.monotonic() - started_at)",
+        "            print(f'Progress: {percent:3d}% | Elapsed: {elapsed}', flush=True)",
+        "            last_percent = percent",
+        "    out = write_output(audio, collected_segments)",
+        "    print('Saved output to:', out, flush=True)",
+        "    print('', flush=True)"
+      ].join("\n");
+
+      return [
+        `$env:PATH = ${psQuote(`${cublasBin};$env:PATH`)}`,
+        `$Code = @'`,
+        code,
+        `'@`,
+        `$Code | & ${psQuote(pythonPath)} -`
+      ].join("\n");
+    }
+
+    function buildDiarizeCommand() {
+      const inputFiles = getInputFiles();
+      const cublasBin = PYTHON_PATH.replace(/\\Scripts\\python\.exe$/i, "\\Lib\\site-packages\\nvidia\\cublas\\bin");
+      const language = getLanguage();
+      const speakerArgs = getSpeakerArgs();
+      const args = [
+        "--model", getModelPath(),
+        "--device", getDevice(),
+        "--compute-type", el.computeType.value,
+        "--beam-size", String(Number(el.beamSize.value || 5)),
+        "--pyannote-model", getPyannoteModel(),
+        "--pyannote-device", el.pyannoteDevice.value,
+        "--no-word-timestamps"
+      ];
+
+      if (language) {
+        args.push("--language", language);
+      }
+      if (speakerArgs.min) {
+        args.push("--min-speakers", String(speakerArgs.min));
+      }
+      if (speakerArgs.max) {
+        args.push("--max-speakers", String(speakerArgs.max));
+      }
+
+      const outputDir = cleanFilePath(el.diarizeOutputDir.value);
+      const lines = [
+        `$env:PATH = ${psQuote(`${cublasBin};$env:PATH`)}`
+      ];
+
+      if (el.hfToken.value.trim()) {
+        lines.push(`$env:HF_TOKEN = ${psQuote(el.hfToken.value.trim())}`);
+      }
+
+      lines.push(
+        `$DiarizePython = ${psQuote(DIARIZE_PYTHON_PATH)}`,
+        `$DiarizeScript = ${psQuote(DIARIZE_SCRIPT_PATH)}`,
+        `$InputFiles = @(`
+      );
+
+      inputFiles.forEach((path, index) => {
+        const comma = index === inputFiles.length - 1 ? "" : ",";
+        lines.push(`  ${psQuote(path)}${comma}`);
+      });
+
+      lines.push(")");
+
+      const fixedArgs = args.map(psQuote).join(" ");
+      lines.push(
+        "",
+        "foreach ($Audio in $InputFiles) {",
+        outputDir && inputFiles.length === 1
+          ? `  $OutputDir = ${psQuote(outputDir)}`
+          : "  $OutputDir = Split-Path -Parent $Audio",
+        `  & $DiarizePython $DiarizeScript $Audio ${fixedArgs} "--output-dir" $OutputDir`,
+        "}"
+      );
+
+      return lines.join("\n");
+    }
+
+    function buildCommand() {
+      return el.enableDiarization.checked ? buildDiarizeCommand() : buildTranscribeCommand();
+    }
+
+    function renderSummary() {
+      const items = [
+        ["Device", getDevice()],
+        ["Model", el.modelName.value || "medium"],
+        ["Compute", el.computeType.value],
+        ["Workflow", el.enableDiarization.checked ? "diarize" : "transcribe"],
+        ["Pyannote", el.enableDiarization.checked ? `${el.pyannoteDevice.value === "cuda" ? "gpu" : el.pyannoteDevice.value}, fast` : "off"],
+        ["Task", el.enableDiarization.checked ? "speaker labels" : el.task.value],
+        ["Files", String(getInputFiles().length)],
+        ["Language", getLanguage() || "auto"],
+        ["Output", el.enableDiarization.checked ? "diarized.txt + .json" : (el.outputSuffix.value || ".txt")],
+        ["Output folder", "same as input"]
+      ];
+
+      if (el.enableDiarization.checked) {
+        const speakers = getSpeakerArgs();
+        const speakerText = speakers.min && speakers.max
+          ? (speakers.min === speakers.max ? String(speakers.min) : `${speakers.min}-${speakers.max}`)
+          : "auto";
+        items.push(["Speakers", speakerText]);
+      }
+
+      summary.innerHTML = items.map(([label, value]) => (
+        `<div class="pill"><span>${label}</span>${escapeHtml(value)}</div>`
+      )).join("");
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function renderWarning() {
+      const messages = [];
+      if (el.profile.value === "gpu" && ["large-v3", "large-v3-turbo", "distill-large-v3.5-eng-only"].includes(el.modelName.value.trim())) {
+        messages.push("GPU note: these large models may exceed 3 GB VRAM. If this happens, transcription may fail before it starts or stop with a GPU out-of-memory error. Switch to CPU if GPU memory runs out.");
+      }
+      if (el.modelName.value === "distill-large-v3.5-eng-only" && el.task.value === "translate") {
+        messages.push("Model note: distill-large-v3.5-eng-only is named as English-only, so translation workflows may be better with large-v3 or large-v3-turbo.");
+      }
+      if (el.enableDiarization.checked) {
+        if (!el.hfToken.value.trim()) {
+          messages.push("Diarization note: this command expects $env:HF_TOKEN to already be set in the PowerShell window, unless you enter a token in the optional token field.");
+        }
+        if (el.task.value === "translate") {
+          messages.push("Diarization note: the current diarization runner performs transcription plus speaker labeling; translation output is not part of the diarized command.");
+        }
+        if (el.outputSuffix.value !== ".txt") {
+          messages.push("Diarization note: speaker-labeled output is written as diarized.txt and diarized.json, not SRT or VTT.");
+        }
+        if (el.pyannoteDevice.value === "cuda") {
+          messages.push("Diarization speed note: GPU is enabled for pyannote. If the GTX 1050 runs out of memory, switch Pyannote device to CPU.");
+        }
+        messages.push("Diarization speed note: fast segment-level mode is always on and skips word timestamps.");
+        if (cleanFilePath(el.diarizeOutputDir.value) && getInputFiles().length > 1) {
+          messages.push("Batch diarization note: custom output folder is used only for single-file diarization. Batch diarization defaults to each input file's folder.");
+        }
+      }
+      warning.textContent = messages.join(" ");
+    }
+
+    function render() {
+      customLanguageWrap.hidden = el.language.value !== "custom";
+      speakerRangeWrap.hidden = el.speakerPreset.value !== "range";
+      customPyannoteModelWrap.hidden = el.pyannoteModel.value !== "custom";
+      singleInputWrap.hidden = el.inputMode.value !== "single";
+      multiInputWrap.hidden = el.inputMode.value !== "multi";
+      output.textContent = buildCommand();
+      renderSummary();
+      renderWarning();
+      status.textContent = "";
+    }
+
+    function resetDefaults() {
+      for (const [id, value] of Object.entries(defaults)) {
+        const node = el[id];
+        if (node.type === "checkbox") {
+          node.checked = value;
+        } else {
+          node.value = value;
+        }
+      }
+      setMultiFiles([defaults.audioPath]);
+      render();
+    }
+
+    ids.forEach((id) => {
+      const node = el[id];
+      node.addEventListener("input", () => {
+        render();
+      });
+      node.addEventListener("change", () => {
+        render();
+      });
+    });
+
+    document.getElementById("copyButton").addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(output.textContent);
+        status.textContent = "Copied to clipboard.";
+      } catch (error) {
+        status.textContent = "Select the command text and copy it manually.";
+      }
+    });
+
+    document.getElementById("addFileButton").addEventListener("click", () => {
+      filePathList.append(createFileRow(""));
+      render();
+    });
+
+    el.audioPath.addEventListener("paste", handlePathPaste);
+    el.audioPath.addEventListener("blur", () => normalizePathInput(el.audioPath));
+    filePathList.addEventListener("paste", handlePathPaste);
+    filePathList.addEventListener("input", handlePathInput);
+    filePathList.addEventListener("blur", handlePathInput, true);
+
+    filePathList.addEventListener("click", (event) => {
+      if (!event.target.classList.contains("remove-file")) {
+        return;
+      }
+      const rows = filePathList.querySelectorAll(".file-row");
+      if (rows.length === 1) {
+        rows[0].querySelector(".multi-file-path").value = "";
+      } else {
+        event.target.closest(".file-row").remove();
+      }
+      render();
+    });
+
+    document.getElementById("resetButton").addEventListener("click", resetDefaults);
+
+    render();
+  </script>
+</body>
+</html>
